@@ -1,10 +1,13 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Backdrop } from "@/components/Backdrop";
+import { Frame } from "@/components/Frame";
 import { Nav } from "@/components/Nav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/Button";
 import { TagList } from "@/components/Section";
+import { getArt } from "@/components/blog/BlogArt";
 import { posts, getPost } from "../posts";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -25,10 +28,13 @@ export default async function PostPage({ params }: Params) {
   const post = getPost(slug);
   if (!post) notFound();
 
+  const art = getArt(slug);
+
   return (
     <>
       <Backdrop />
       <div className="shell">
+        <Frame />
         <Nav />
 
         <article className="article">
@@ -47,9 +53,27 @@ export default async function PostPage({ params }: Params) {
           <h1 className="article-title">{post.title}</h1>
           <TagList items={post.tags} className="article-tags" />
 
+          {art && (
+            <figure className="cover-fig">
+              <div className="article-cover">{art.cover}</div>
+              <figcaption className="figcap">{art.coverCaption}</figcaption>
+            </figure>
+          )}
+
           <div className="article-body">
             {post.body.map((para, i) => (
-              <p key={i}>{para}</p>
+              <Fragment key={i}>
+                <p>{para}</p>
+                {art && i === 0 && (
+                  <figure className="figure">
+                    <div className="figure-frame">{art.figure}</div>
+                    <figcaption className="figcap">
+                      <span className="figcap-k">Figure</span>
+                      {art.figureCaption}
+                    </figcaption>
+                  </figure>
+                )}
+              </Fragment>
             ))}
           </div>
 

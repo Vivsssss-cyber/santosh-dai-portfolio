@@ -1,27 +1,34 @@
-/* ---- Redaction (display serif, local) ---- */
+/* ---- Redaction (display serif, local) ----
+   woff2 first (brotli, ~⅓ the size), otf kept as a fallback url so older
+   engines still resolve — same glyphs, identical rendering. */
 @font-face {
   font-family: "Redaction";
-  src: url("/fonts/otf/Redaction35-Regular.otf") format("opentype");
+  src: url("/fonts/otf/Redaction35-Regular.woff2") format("woff2"),
+       url("/fonts/otf/Redaction35-Regular.otf") format("opentype");
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: "Redaction";
-  src: url("/fonts/otf/Redaction35-Italic.otf") format("opentype");
+  src: url("/fonts/otf/Redaction35-Italic.woff2") format("woff2"),
+       url("/fonts/otf/Redaction35-Italic.otf") format("opentype");
   font-weight: 400; font-style: italic; font-display: swap;
 }
 @font-face {
   font-family: "Redaction";
-  src: url("/fonts/otf/Redaction35-Bold.otf") format("opentype");
+  src: url("/fonts/otf/Redaction35-Bold.woff2") format("woff2"),
+       url("/fonts/otf/Redaction35-Bold.otf") format("opentype");
   font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: "Redaction Display";
-  src: url("/fonts/otf/Redaction50-Regular.otf") format("opentype");
+  src: url("/fonts/otf/Redaction50-Regular.woff2") format("woff2"),
+       url("/fonts/otf/Redaction50-Regular.otf") format("opentype");
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: "Redaction Display";
-  src: url("/fonts/otf/Redaction50-Bold.otf") format("opentype");
+  src: url("/fonts/otf/Redaction50-Bold.woff2") format("woff2"),
+       url("/fonts/otf/Redaction50-Bold.otf") format("opentype");
   font-weight: 700; font-style: normal; font-display: swap;
 }
 
@@ -112,28 +119,65 @@ body {
 
 /* ---------- nav ---------- */
 .nav {
-  position: relative;
-  z-index: 5;
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--s-4);
-  padding: var(--s-6) 0 0;
+  padding: var(--s-6) 0 var(--s-4);
   /* share the section content column (.wrap) so the brand + contact land on
      the same side margins as every section below — frame stays decorative. */
   width: 100%;
   max-width: var(--rail);
   margin-inline: auto;
+  transition: transform var(--dur-slow) var(--ease-out),
+              padding var(--dur) var(--ease-out);
 }
+/* smart-sticky: slide away on a downward scroll; snap back on scroll-up. Always
+   reveal when a child is keyboard-focused so Tab never lands on a hidden bar. */
+.nav--hidden { transform: translateY(-100%); }
+.nav:focus-within { transform: none; }
 .brand {
-  flex: 1;
-  font-family: var(--sans);
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: .2px;
-  color: var(--cream);
+  flex: 1;                 /* keep the layout spacer; the wordmark hugs the text */
+  text-decoration: none;   /* no link underline */
   white-space: nowrap;
 }
+.brand:focus-visible { outline: none; }
+/* Brand wordmark — Redaction Display, with always-on dynamic inversion.
+   mix-blend-mode:difference on a white wordmark composites against whatever is
+   directly behind it, so the text renders as the INVERSE of the pixels under it
+   — staying legible as the sticky bar crosses changing background colours (hero,
+   sections, shader, the research chips). Hover/focus drops the blend to normal
+   and wipes a cream block in left→right for a deliberate, clean invert.
+   Scoped to the text span so it never paints across the full-width link. */
+.brand-mark {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.1;
+  color: #fff;                  /* white source → difference = inverse of the bg behind */
+  mix-blend-mode: difference;
+  padding: 2px 8px;
+  margin-left: -8px;       /* offset the block's own padding back to the rail edge */
+  border-radius: 5px;
+  background-image: linear-gradient(var(--cream), var(--cream));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition: background-size var(--dur-slow) var(--ease-out),
+              color var(--dur) var(--ease-out);
+}
+.brand:hover .brand-mark,
+.brand:focus-visible .brand-mark {
+  mix-blend-mode: normal;       /* show the cream wipe true, not double-blended */
+  color: var(--bg);
+  background-size: 100% 100%;
+}
+.brand:focus-visible .brand-mark { box-shadow: var(--ring); }
 .nav-links {
   order: 3;
   width: 100%;
@@ -188,12 +232,27 @@ body {
 .nav-contact:active { transform: translateY(0); }
 .nav-contact:focus-visible { outline: none; box-shadow: var(--ring); }
 
+/* ---- scrollspy: top progress bar + active-section indicator ---- */
+/* thin hairline that fills (scaleX 0→1) as the page scrolls */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  transform-origin: 0 50%;
+  background: var(--grad-cta);
+  z-index: 50;
+  pointer-events: none;
+}
+
 /* ---------- buttons (matching nav) ---------- */
 .btn {
+  position: relative;
+  isolation: isolate;          /* local stacking ctx so the shine layers cleanly */
+  overflow: hidden;            /* clip the sweep to the pill (box-shadow ring unaffected) */
   font-family: var(--sans);
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;
@@ -205,9 +264,10 @@ body {
   white-space: nowrap;
   will-change: transform;
 }
-/* base lift on hover; press settles back down for a tactile click */
+.btn-label { position: relative; z-index: 1; }   /* label rides above the sweep */
+/* base lift on hover; press settles + a hair of scale for a tactile click */
 .btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); transition-duration: var(--dur-fast); }
+.btn:active { transform: translateY(0) scale(.97); transition-duration: var(--dur-fast); }
 .btn:focus-visible { outline: none; box-shadow: var(--ring); }
 
 /* primary — warm gradient CTA */
@@ -222,6 +282,18 @@ body {
   filter: brightness(1.06);
   box-shadow: var(--shadow-cta-hover);
 }
+/* shine — a diagonal highlight that sweeps across once on hover */
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .42) 50%, transparent 65%);
+  transform: translateX(-130%);
+  transition: transform .65s var(--ease-out);
+  pointer-events: none;
+}
+.btn-primary:hover::before { transform: translateX(130%); }
 
 /* secondary — white button, same shape/sizing */
 .btn-white {
@@ -986,7 +1058,9 @@ body {
   position: absolute;
   right: clamp(0px, 4vw, 64px);
   top: 50%;
-  transform: translateY(-50%);
+  /* this class sits on the RevealImg MASK span; centre it with `translate`
+     (the inner <img> owns `transform` for its slide-up reveal). */
+  translate: 0 -50%;
   width: clamp(220px, 26vw, 340px);
   height: auto;
   pointer-events: none;
@@ -1186,6 +1260,14 @@ body {
     transform: none;
   }
   .foot-links a::after { transition: none; }
+  /* kill the CTA shine sweep — purely decorative motion */
+  .btn-primary::before { display: none; }
+  /* sticky bar never slides out of view */
+  .nav { transition: none; }
+  .nav--hidden { transform: none; }
+  /* brand inversion still happens, just no wipe — snaps instantly */
+  .brand-mark { transition: none; }
+  /* progress bar still tracks the user's own scroll (not autonomous), so it stays */
   /* freeze the galaxy flat — nodes stay at their t=0 (upright) positions */
   .ts-ring,
   .ts-ring .ts-cell { animation: none; }
@@ -1195,20 +1277,23 @@ body {
 
 /* =====================================================================
    BLOG — /blogs index + /blogs/[slug] detail. Amber Dusk, editorial.
+   Locked to the same --rail / --canvas system as the home sections: content
+   sits on the rail; hairline dividers span the canvas to meet the frame.
    ===================================================================== */
-.blog-wrap { max-width: 880px; margin: 0 auto; width: 100%; }
 
-/* ---- index header ---- */
+/* ---- index header (reads like the hero / a section head) ---- */
 .blog-head {
-  padding: clamp(2.5rem, 7vw, 5rem) clamp(var(--s-6), 5vw, var(--s-12)) clamp(2rem, 5vw, 3rem);
-  border-bottom: 1px solid var(--frame);
+  position: relative;
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: clamp(4.5rem, 12vw, 8rem) 0 clamp(2.5rem, 6vw, 4rem);
 }
-.blog-head .eyebrow { display: block; margin-bottom: var(--s-4); }
+.blog-head .eyebrow { display: block; margin-bottom: var(--s-5); }
 .blog-title {
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(38px, 8vw, 66px);
-  line-height: 1.02;
+  font-size: clamp(40px, 8.4vw, 72px);
+  line-height: 1.0;
   letter-spacing: -.5px;
   color: var(--cream);
 }
@@ -1219,7 +1304,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 .blog-lead {
-  margin-top: var(--s-5);
+  margin-top: var(--s-6);
   max-width: 60ch;
   font-size: 17px;
   line-height: 1.6;
@@ -1251,21 +1336,34 @@ body {
 }
 .lcat-accent { color: var(--accent-1); }
 
-/* ---- the ledger: vertical side lines bound the column ---- */
+/* ---- the ledger: an open column locked to the rail (no bounding box) ---- */
 .ledger {
   position: relative;
-  max-width: 1080px;
-  margin: var(--s-8) auto 0;
-  border: 1px solid var(--frame);
-  border-bottom: none;          /* the rows supply the closing rule */
+  max-width: var(--rail);
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* ---- featured post — full ledger width ---- */
+/* canvas-width hairline above each entry — reaches the frame line exactly,
+   mirroring .section::before. Open editorial rows, not a boxed ledger. */
+.lfeature::before,
+.lrow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--canvas);
+  border-top: 1px solid var(--frame);
+  pointer-events: none;
+}
+
+/* ---- featured post — full rail width ---- */
 .lfeature {
+  position: relative;
   display: block;
   text-decoration: none;
-  padding: clamp(var(--s-8), 5vw, var(--s-14)) clamp(var(--s-6), 5vw, var(--s-12));
-  border-bottom: 1px solid var(--frame);
+  padding: clamp(var(--s-10), 5vw, var(--s-16)) 0;
 }
 .lfeature .lcat { margin-bottom: var(--s-4); }
 .lfeature-title {
@@ -1288,16 +1386,19 @@ body {
 .lfeature .post-meta { margin-top: var(--s-6); }
 .lfeature .taglist { margin-top: var(--s-5); }
 
-/* ---- ruled rows: [category + meta rail | post body] ---- */
+/* ---- rows: [category + meta rail | post body] ---- */
 .lrow {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
+  gap: var(--s-4);
   text-decoration: none;
-  border-bottom: 1px solid var(--frame);
+  padding: clamp(var(--s-8), 4vw, var(--s-12)) 0;
 }
-.lmeta { padding: clamp(var(--s-6), 4vw, var(--s-8)) clamp(var(--s-6), 5vw, var(--s-12)) 0; }
+.lmeta { padding: 0; }
 .lmeta-stack { margin-top: var(--s-2); }
-.lcontent { padding: var(--s-3) clamp(var(--s-6), 5vw, var(--s-12)) clamp(var(--s-6), 4vw, var(--s-8)); }
+.lcontent { padding: 0; }
+.lrow:hover .lcat { color: var(--accent-1); }
 .lrow-title {
   font-family: var(--serif);
   font-weight: 600;
@@ -1316,12 +1417,12 @@ body {
 }
 .lrow .taglist { margin-top: var(--s-4); }
 
-/* ---- post detail (article) ---- */
+/* ---- post detail (article) — centered reading column inside the frame ---- */
 .article {
+  position: relative;
   max-width: 760px;
-  margin: var(--s-8) auto 0;
-  border: 1px solid var(--frame);
-  padding: clamp(2rem, 6vw, 4rem) clamp(var(--s-6), 5vw, var(--s-12)) clamp(3rem, 7vw, 5rem);
+  margin: 0 auto;
+  padding: clamp(4.5rem, 12vw, 8rem) 0 clamp(3rem, 7vw, 5rem);
 }
 .article-back {
   display: inline-block;
@@ -1360,20 +1461,77 @@ body {
   gap: var(--s-3);
 }
 
-/* ---- tablet/desktop: meta rail + interior side line ---- */
+/* =====================================================================
+   ARTICLE MEDIA — cover + inline figures.
+   No stock photos: each post is illustrated with a themed blueprint SVG
+   diagram drawn from the shared .dgm-* class language below, so every figure
+   stays inside the Amber Dusk palette and scales crisp at any width.
+   ===================================================================== */
+.article-cover {
+  margin-top: clamp(var(--s-8), 5vw, var(--s-12));
+  border: 1px solid var(--frame);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(130% 150% at 16% -10%, rgba(250, 160, 51, .12), transparent 58%),
+    rgba(255, 255, 255, .015);
+  overflow: hidden;
+}
+.article-cover .dgm { padding: clamp(var(--s-5), 3.5vw, var(--s-10)); }
+
+.figure { margin: clamp(var(--s-10), 5vw, var(--s-12)) 0; }
+.figure-frame {
+  border: 1px solid var(--frame);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .015);
+  overflow: hidden;
+}
+.figure .dgm { padding: clamp(var(--s-5), 3vw, var(--s-7)); }
+.figcap {
+  margin-top: var(--s-4);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 60ch;
+}
+.figcap .figcap-k {
+  margin-right: var(--s-3);
+  color: var(--accent-1);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ---- shared blueprint diagram language (inline SVG only) ---- */
+.dgm { display: block; width: 100%; height: auto; }
+.dgm-line,
+.dgm-ink,
+.dgm-amber,
+.dgm-dash { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.dgm-line { stroke: var(--frame); stroke-width: 1.25; }
+.dgm-ink { stroke: var(--cream); stroke-width: 1.5; }
+.dgm-amber { stroke: var(--amber-lit); stroke-width: 1.75; }
+.dgm-dash { stroke: var(--frame); stroke-width: 1.25; stroke-dasharray: 4 6; }
+.dgm-ink-fill { fill: var(--cream); }
+.dgm-amber-fill { fill: var(--amber-lit); }
+.dgm-hot { fill: var(--amber); }
+.dgm-soft { fill: var(--amber); opacity: .14; }
+.dgm-soft-ink { fill: var(--cream); opacity: .05; }
+.dgm-label { fill: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.dgm-tick { fill: var(--muted-2); font-family: var(--sans); font-size: 12px; }
+.dgm-num { fill: var(--cream); font-family: var(--display); font-size: 30px; letter-spacing: -.5px; }
+.dgm-num-accent { fill: var(--amber-lit); font-family: var(--display); font-size: 32px; letter-spacing: -.5px; }
+
+/* ---- tablet/desktop: meta rail beside the post body ---- */
 @media (min-width: 768px) {
-  .lrow { grid-template-columns: 248px 1fr; }
-  .lmeta {
-    padding: clamp(var(--s-8), 3vw, var(--s-10)) clamp(var(--s-5), 2.5vw, var(--s-8));
+  .lrow {
+    grid-template-columns: 232px 1fr;
+    gap: clamp(var(--s-8), 4vw, var(--s-14));
   }
   .lmeta-stack {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--s-2);
     margin-top: var(--s-4);
-  }
-  .lcontent {
-    border-left: 1px solid var(--frame);   /* interior side line */
-    padding: clamp(var(--s-8), 3vw, var(--s-10)) clamp(var(--s-8), 4vw, var(--s-12));
   }
 }

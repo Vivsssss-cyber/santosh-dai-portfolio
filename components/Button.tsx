@@ -50,10 +50,14 @@ export function Button({
     .filter(Boolean)
     .join(" ");
 
+  // Wrap the label so it owns its own stacking layer — the primary variant's
+  // shine sweep (a ::before) rides BELOW this span, never washing out the text.
+  const label = <span className="btn-label">{children}</span>;
+
   if ("href" in rest && rest.href) {
     return (
       <a className={cls} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
-        {children}
+        {label}
       </a>
     );
   }
@@ -63,7 +67,7 @@ export function Button({
       className={cls}
       {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}
     >
-      {children}
+      {label}
     </button>
   );
 }

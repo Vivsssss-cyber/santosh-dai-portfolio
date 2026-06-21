@@ -2,8 +2,9 @@ import { IconCTO, IconYears, IconDegree } from "@/components/Icons";
 import { Button } from "@/components/Button";
 import { InfoCard } from "@/components/InfoCard";
 import { RevealGroup, RevealLine } from "@/components/RevealText";
-import { Reveal, RevealItem } from "@/components/Reveal";
+import { Reveal, RevealItem, RevealMedia, RevealImg } from "@/components/Reveal";
 import { SectionHead, TagList } from "@/components/Section";
+import { Nav } from "@/components/Nav";
 import { TechStack } from "@/components/TechStack";
 import ShaderBackground from "@/components/ui/shader-background";
 import ResearchExplorer from "@/components/ui/research-explorer";
@@ -13,9 +14,9 @@ export default function Home() {
     <>
       {/* corner light glows — fixed to viewport corners */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="light light-left" src="/assets/Left-light.png" alt="" aria-hidden="true" />
+      <img className="light light-left" src="/assets/Left-light.webp" alt="" aria-hidden="true" decoding="async" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="light light-right" src="/assets/right-light.png" alt="" aria-hidden="true" />
+      <img className="light light-right" src="/assets/right-light.webp" alt="" aria-hidden="true" decoding="async" />
 
       <div className="shell">
         {/* inset frame + plus markers */}
@@ -32,21 +33,8 @@ export default function Home() {
         {/* faint waveform */}
         <div className="waveform" aria-hidden="true" />
 
-        {/* NAV */}
-        <nav className="nav">
-          <div className="brand">Santosh Dahal</div>
-          <div className="nav-links">
-            <a href="#about">ABOUT</a>
-            <a href="#research">RESEARCH</a>
-            <a href="#building">BUILDING</a>
-            <a href="#education">EDUCATION</a>
-            <a href="#stack">STACK</a>
-            <a href="/blogs">WRITING</a>
-          </div>
-          <div className="nav-actions">
-            <a href="#contact" className="nav-contact">CONTACT ME</a>
-          </div>
-        </nav>
+        {/* NAV — shared component; scrollspy active on this page */}
+        <Nav />
 
         {/* HERO */}
         <section className="hero">
@@ -60,9 +48,8 @@ export default function Home() {
               </span>
             </h1>
             <RevealLine as="p" className="h-body">
-              I have a proven track record of leading and contributing to end-to-end AI
-              systems from research and model development to scalable production
-              deployment.
+              I work across the full arc of speech and language AI — from research
+              and model development to production at scale.
             </RevealLine>
             <RevealLine as="div" className="h-actions" display="flex">
               <Button href="#research" variant="primary">View Research</Button>
@@ -79,7 +66,7 @@ export default function Home() {
             loop
             muted
             playsInline
-            poster="/assets/person.png"
+            poster="/assets/person.webp"
             aria-label="Santosh Dahal — 3D avatar, rotating"
           >
             <source src="/assets/person.webm" type="video/webm" />
@@ -99,7 +86,7 @@ export default function Home() {
               <InfoCard
                 icon={<IconYears />}
                 title="5+ Years in AI & NLP"
-                sub="Years in AI & NLP"
+                sub="Speech, LLMs & on-device ML"
               />
             </RevealLine>
             <RevealLine>
@@ -183,7 +170,9 @@ export default function Home() {
               </RevealItem>
             </Reveal>
 
-            <ResearchExplorer />
+            <RevealMedia>
+              <ResearchExplorer />
+            </RevealMedia>
           </div>
         </section>
 
@@ -252,9 +241,11 @@ export default function Home() {
               <RevealItem>
                 <img
                   className="builder-img"
-                  src="/assets/builder.png"
+                  src="/assets/builder.webp"
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
                 />
               </RevealItem>
             </Reveal>
@@ -359,7 +350,9 @@ export default function Home() {
                 </RevealItem>
               </Reveal>
             </div>
-            <TechStack />
+            <RevealMedia amount={0.15}>
+              <TechStack />
+            </RevealMedia>
           </div>
         </section>
 
@@ -396,11 +389,15 @@ export default function Home() {
 
         {/* CONTACT */}
         <section id="contact" className="section contact-sec">
-          <img
+          {/* Centring lives on the CSS `translate` property, so the reveal can
+              own `transform` — full fade + rise + scale, still vertically centred. */}
+          <RevealImg
             className="contact-monk"
-            src="/assets/person-monk.png"
+            src="/assets/person-monk.webp"
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
           />
           <Reveal className="wrap">
             <RevealItem>
@@ -408,9 +405,9 @@ export default function Home() {
             </RevealItem>
             <RevealItem>
               <p className="contact-body">
-                Interested in collaboration, research discussions, or just speech AI
-                and accessibility? Reach out — always open to interesting research
-                conversations and opportunities.
+                Working on speech recognition, low-resource NLP, or accessibility —
+                or just want to compare notes? Always glad to talk research and
+                collaboration.
               </p>
             </RevealItem>
             <RevealItem className="contact-actions">

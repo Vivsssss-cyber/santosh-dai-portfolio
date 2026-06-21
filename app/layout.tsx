@@ -24,6 +24,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Preload the hero display face (LCP heading) so the swap lands fast. */}
+        <link
+          rel="preload"
+          href="/fonts/otf/Redaction50-Regular.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={jakarta.className}>{children}</body>
     </html>
   );

@@ -94,7 +94,7 @@ function getPos(offset: number, reduce: boolean) {
   const SCALE = [1, 0.86, 0.72, 0.66][a];
   const OPACITY = [1, 0.55, 0.28, 0][a];
   const Z = [30, 20, 10, 0][a];
-  const BLUR = [0, 2, 4, 6][a];
+  const BLUR = [0, 1, 2, 3][a];
   return {
     x: sign * X,
     rotateY: reduce ? 0 : -sign * ROT,

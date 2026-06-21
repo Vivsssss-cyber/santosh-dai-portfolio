@@ -4,9 +4,9 @@ export function Backdrop() {
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="light light-left" src="/assets/Left-light.png" alt="" aria-hidden="true" />
+      <img className="light light-left" src="/assets/Left-light.webp" alt="" aria-hidden="true" decoding="async" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="light light-right" src="/assets/right-light.png" alt="" aria-hidden="true" />
+      <img className="light light-right" src="/assets/right-light.webp" alt="" aria-hidden="true" decoding="async" />
     </>
   );
 }

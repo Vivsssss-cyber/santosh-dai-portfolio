@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Backdrop } from "@/components/Backdrop";
+import { Frame } from "@/components/Frame";
 import { Nav } from "@/components/Nav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal, RevealItem } from "@/components/Reveal";
@@ -20,6 +21,7 @@ export default function BlogIndex() {
     <>
       <Backdrop />
       <div className="shell">
+        <Frame />
         <Nav />
 
         {/* ruled ledger — side lines bound the column, interior rule splits
