@@ -1,0 +1,90 @@
+/* =====================================================================
+   DESIGN TOKENS — Santosh Dahal portfolio
+   Single source of truth for the "Amber Dusk" system.
+   Primitives first, semantic aliases second. Consume via var(--token).
+   Imported before globals.css (see app/layout.tsx).
+   ===================================================================== */
+:root {
+  /* ---- color · primitives (warm dark palette) ---- */
+  --bg: #1a1000;            /* page background — near-black amber          */
+  --pill: #372e21;          /* chip / pill surface                          */
+  --pill-hover: #463c2c;    /* chip / pill surface, hover                   */
+  --cream: #f3ede1;         /* strongest text / headings on dark           */
+  --white: #e6e3dd;         /* default body text on dark                   */
+  --muted: #9a9286;         /* captions, sub-labels                        */
+  --muted-2: #b8b0a4;       /* secondary muted                             */
+  --frame: rgba(176, 164, 142, .32); /* hairline frame / dividers          */
+
+  /* warm accent ramp (amber -> peach) */
+  --accent-1: #fcac6d;
+  --accent-2: #fbc47e;
+  --amber-deep: #983804;
+  --amber: #c35108;
+  --amber-lit: #faa033;
+  --peach: #fbc27d;
+
+  /* ---- color · semantic ---- */
+  --text-strong: var(--cream);
+  --text: var(--white);
+  --text-soft: rgba(255, 255, 255, .86);  /* long-form body copy           */
+  --text-muted: var(--muted);
+  --surface-chip: var(--pill);
+  --surface-chip-hover: var(--pill-hover);
+
+  /* ---- gradients (composed from the amber ramp) ---- */
+  --grad-cta: linear-gradient(170deg, var(--amber-deep) 12.44%, var(--amber-lit) 98.58%);
+  --grad-text: linear-gradient(180deg, var(--amber) 0%, var(--peach) 100%);
+
+  /* ---- typography ---- */
+  --serif: "Redaction", Georgia, serif;                          /* card titles, editorial serif */
+  --display: "Redaction Display", "Redaction", Georgia, serif;   /* hero / display headings      */
+  --sans: "Plus Jakarta Sans", var(--font-jakarta), system-ui, sans-serif; /* UI + body          */
+
+  /* ---- radius ---- */
+  --radius: 9px;           /* pills, buttons, cards — single corner value   */
+
+  /* ---- elevation ---- */
+  --shadow-cta: 0 6px 18px -8px rgba(152, 56, 4, .65), inset 0 1px 0 rgba(255, 255, 255, .18);
+  --shadow-cta-hover: 0 10px 26px -8px rgba(152, 56, 4, .7), inset 0 1px 0 rgba(255, 255, 255, .22);
+  --shadow-white: 0 4px 14px -8px rgba(0, 0, 0, .4);
+
+  /* ---- layout · shared rail (frame + content stay locked together) ----
+     One fluid content column + one canvas box. The blueprint frame, every
+     section divider, the footer hairline and the CTA bleed all snap to
+     --canvas; the reading column snaps to --rail, sitting a CONSTANT
+     --frame-gap inside the canvas at every width. The rail GROWS with the
+     viewport (1180 → 1560) instead of a hard cap, so wide screens use more
+     width; --page-pad is the fluid outer gutter (viewport → frame). */
+  --rail: clamp(1180px, 82vw, 1560px);                 /* content column — grows with screen, caps 1560 */
+  --page-pad: clamp(var(--s-5), 5vw, var(--s-24));     /* outer gutter — shell padding & frame share it */
+  --frame-gap: clamp(var(--s-5), 2.4vw, var(--s-10));  /* gap: frame/divider hairline ↔ content edge */
+  --canvas: min(100%, calc(var(--rail) + 2 * var(--frame-gap))); /* frame/divider/cta/footer-hairline box */
+
+  /* ---- spacing · 4-point scale ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 28px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-14: 56px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+
+  /* ---- motion ---- */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);  /* expressive ease for hover lifts */
+  --dur-fast: .15s;        /* press / transform                             */
+  --dur: .2s;              /* color / background / shadow                    */
+  --dur-slow: .34s;        /* card lift / larger moves                      */
+
+  /* keyboard focus ring (2px gap + accent halo) */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-1);
+  /* soft elevation used by hover lifts */
+  --lift-shadow: 0 10px 24px -12px rgba(0, 0, 0, .6);
+}

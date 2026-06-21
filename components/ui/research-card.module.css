@@ -1,0 +1,150 @@
+/* =====================================================================
+   ResearchCard — Amber Dusk glass card (slim variant).
+   Title (Redaction Display) + top-right category badge + description + tags.
+   No illustration, no metric, no "why" line. Scoped to project tokens.
+   ===================================================================== */
+.card {
+  --k-hairline: var(--frame);
+  --k-hairline2: rgba(176, 164, 142, .5);
+  --k-surface-soft: rgba(243, 237, 225, .04);
+  --k-surface: 26, 16, 0;        /* --bg rgb */
+  --k-ink: var(--cream);
+  --k-muted: var(--muted);
+  --k-accent: var(--amber-lit);
+
+  position: relative;
+  display: block;
+  height: 100%;                  /* fill grid cell → equal-height rows */
+  padding: 4px;                  /* p-1 offset */
+  border-radius: 24px;           /* rounded-3xl */
+  border: 1px solid var(--k-hairline);
+  background: var(--k-surface-soft);
+  overflow: hidden;
+  text-decoration: none;
+  isolation: isolate;
+  transition: border-color var(--dur, .2s) ease;
+  font-family: var(--sans);
+}
+.card:hover { border-color: var(--k-hairline2); }
+.card:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* amber ambient glow, top-left — intensifies on hover */
+.glow {
+  position: absolute;
+  top: -96px;
+  left: -96px;
+  width: 256px;
+  height: 256px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%,
+    rgba(250, 160, 51, .28) 0%,
+    rgba(195, 81, 8, .13) 45%,
+    transparent 72%);
+  filter: blur(40px);
+  opacity: .5;
+  transition: opacity .5s ease, transform .5s ease;
+}
+.card:hover .glow { opacity: 1; transform: scale(1.06); }
+
+/* inner glass container */
+.inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  border-radius: 22px;
+  border: 1px solid var(--k-hairline);
+  background: rgba(var(--k-surface), .6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  overflow: hidden;
+}
+
+.top { display: flex; flex-direction: column; gap: 12px; }
+
+/* title row: title (left) + category badge (right) */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  color: var(--k-ink);
+  font-family: var(--display);   /* Redaction Display (Redaction 50) */
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -.01em;
+  line-height: 1.22;
+}
+.badge {
+  flex: none;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(250, 160, 51, .12);
+  color: var(--k-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.desc {
+  color: var(--k-muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius, 9px);
+  background: var(--pill);
+  border: 1px solid var(--frame);
+  color: var(--white);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+/* active (centered) card — elevated frosted glass: translucent surface,
+   stronger blur, amber-lit hairline + soft drop shadow so it reads as the
+   focused pane floating above the dimmed neighbours. */
+.cardActive {
+  background: var(--k-surface-soft);
+  border-color: var(--k-hairline2);
+  box-shadow:
+    0 28px 70px -28px rgba(0, 0, 0, .75),
+    0 0 0 1px rgba(250, 160, 51, .10);
+}
+.cardActive .inner {
+  background: linear-gradient(
+      180deg,
+      rgba(250, 160, 51, .05) 0%,
+      rgba(var(--k-surface), 0) 40%
+    ),
+    rgba(var(--k-surface), .55);
+  -webkit-backdrop-filter: blur(36px) saturate(1.15);
+  backdrop-filter: blur(36px) saturate(1.15);
+  border-color: rgba(250, 160, 51, .26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+.cardActive .glow { opacity: .9; }

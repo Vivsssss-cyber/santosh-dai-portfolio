@@ -1,0 +1,114 @@
+/* Filter tab bar for the research grid (Amber Dusk). */
+.explorer { margin-top: var(--s-7); }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: var(--s-8);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius);   /* match the button corner (9px), not a full pill */
+  border: 1px solid var(--frame);
+  background: transparent;
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  cursor: pointer;
+  transition: background var(--dur), color var(--dur), border-color var(--dur),
+              box-shadow var(--dur), transform var(--dur-fast) var(--ease-out);
+}
+.tab:hover { border-color: rgba(176, 164, 142, .5); transform: translateY(-1px); }
+.tab:focus-visible { outline: none; box-shadow: var(--ring); }
+.count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* active tab — amber gradient, matches the site's primary CTA */
+.tabActive {
+  background: var(--grad-cta);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-cta);
+}
+.tabActive:hover { border-color: transparent; }
+.tabActive .count { color: rgba(255, 255, 255, .82); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab:hover { transform: none; }
+}
+
+/* ---- coverflow 3D stage ---- */
+.stage {
+  position: relative;
+  height: clamp(360px, 56vh, 460px);
+  margin: 0 auto;
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  touch-action: pan-y;            /* let the page scroll vertically; drag x here */
+}
+.stageDraggable { cursor: grab; }
+.stageDraggable:active { cursor: grabbing; }
+.stage:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 24px;
+}
+
+.cardWrap {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: clamp(290px, 78vw, 400px);
+  height: 100%;
+  margin-left: calc(clamp(290px, 78vw, 400px) / -2);
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity, filter;
+}
+.cardWrapSide { cursor: pointer; }
+
+/* ---- controls: arrows + dots ---- */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: var(--s-7);
+}
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: var(--pill-hover);
+  cursor: pointer;
+  transition: background var(--dur), width var(--dur),
+              transform var(--dur-fast) var(--ease-out);
+}
+.dot:hover { transform: scale(1.2); }
+.dot:focus-visible { outline: none; box-shadow: var(--ring); }
+.dotActive {
+  width: 22px;
+  background: var(--grad-cta);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot:hover { transform: none; }
+}

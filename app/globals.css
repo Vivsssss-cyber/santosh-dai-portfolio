@@ -1,0 +1,1379 @@
+/* ---- Redaction (display serif, local) ---- */
+@font-face {
+  font-family: "Redaction";
+  src: url("/fonts/otf/Redaction35-Regular.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Redaction";
+  src: url("/fonts/otf/Redaction35-Italic.otf") format("opentype");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "Redaction";
+  src: url("/fonts/otf/Redaction35-Bold.otf") format("opentype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Redaction Display";
+  src: url("/fonts/otf/Redaction50-Regular.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Redaction Display";
+  src: url("/fonts/otf/Redaction50-Bold.otf") format("opentype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* Design tokens live in app/tokens.css (imported first in app/layout.tsx). */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* corner light glows — fixed to viewport corners */
+.light {
+  position: fixed;
+  top: 0;
+  z-index: 0;
+  width: 620px;
+  max-width: min(42vw, 720px);
+  height: auto;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  mix-blend-mode: screen;
+}
+.light-left { left: 0; }
+.light-right { right: 0; }
+
+/* ---------- shell / canvas ---------- */
+.shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  padding: 0 var(--page-pad) var(--s-12);
+}
+
+/* inset hairline frame (≥768px / iPad and up).
+   Centered on the SAME 1180 rail as the content, then widened by --frame-gap
+   on each side. Result: a constant gap between the frame line and the content
+   column at every viewport — no drift between desktop, laptop, and iPad. */
+.frame {
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /* content width = min(rail, available); frame = that + a gap each side,
+     capped to the canvas so it never spills past the gutter. */
+  width: min(
+    100%,
+    min(var(--rail), 100% - 2 * var(--page-pad)) + 2 * var(--frame-gap)
+  );
+  top: var(--s-24);
+  bottom: var(--s-6);
+  border: 1px solid var(--frame);
+  pointer-events: none;
+  z-index: 1;
+}
+.frame .plus { position: absolute; }
+.frame .tl { top: -6px; left: -6px; }
+.frame .tr { top: -6px; right: -6px; }
+.frame .bl { bottom: -6px; left: -6px; }
+.frame .br { bottom: -6px; right: -6px; }
+.frame .ml { top: 28%; left: -6px; }
+.frame .mr { top: 42%; right: -6px; }
+.frame .ml2 { top: 64%; left: -6px; }
+
+.plus {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  opacity: .7;
+}
+.plus::before, .plus::after {
+  content: "";
+  position: absolute;
+  background: rgba(214, 205, 188, .6);
+}
+.plus::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-50%); }
+.plus::after { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-50%); }
+
+/* faint audio waveform near the lower hero */
+.waveform { display: none; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  padding: var(--s-6) 0 0;
+  /* share the section content column (.wrap) so the brand + contact land on
+     the same side margins as every section below — frame stays decorative. */
+  width: 100%;
+  max-width: var(--rail);
+  margin-inline: auto;
+}
+.brand {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: .2px;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.nav-links {
+  order: 3;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;   /* align wrapped link row to the rail edge */
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--s-4);
+}
+.nav-links a {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .6px;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  background: var(--pill);
+  white-space: nowrap;
+  transition: background var(--dur), color var(--dur),
+              transform var(--dur-fast) var(--ease-out), box-shadow var(--dur);
+}
+.nav-links a:hover {
+  background: var(--pill-hover);
+  color: var(--cream);
+  transform: translateY(-1px);
+  box-shadow: var(--lift-shadow);
+}
+.nav-links a:active { transform: translateY(0); }
+.nav-links a:focus-visible { outline: none; box-shadow: var(--ring); }
+.nav-actions { flex: 1; display: flex; justify-content: flex-end; }
+.nav-contact {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding: 11px 20px;
+  border-radius: var(--radius);
+  background: var(--pill);
+  transition: background var(--dur), color var(--dur),
+              transform var(--dur-fast) var(--ease-out), box-shadow var(--dur);
+  white-space: nowrap;
+}
+.nav-contact:hover {
+  background: var(--pill-hover);
+  color: var(--cream);
+  transform: translateY(-1px);
+  box-shadow: var(--lift-shadow);
+}
+.nav-contact:active { transform: translateY(0); }
+.nav-contact:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* ---------- buttons (matching nav) ---------- */
+.btn {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 20px;
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur), color var(--dur), box-shadow var(--dur), filter var(--dur);
+  white-space: nowrap;
+  will-change: transform;
+}
+/* base lift on hover; press settles back down for a tactile click */
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); transition-duration: var(--dur-fast); }
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* primary — warm gradient CTA */
+.btn-primary {
+  color: #fff;
+  border: none;
+  background: var(--grad-cta);
+  background-blend-mode: screen;
+  box-shadow: var(--shadow-cta);
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: var(--shadow-cta-hover);
+}
+
+/* secondary — white button, same shape/sizing */
+.btn-white {
+  background: #f5f1e8;
+  color: #1c1812;
+  border: 1px solid rgba(28, 24, 18, .12);
+  box-shadow: var(--shadow-white);
+}
+.btn-white:hover { background: #fff; box-shadow: var(--shadow-white), var(--lift-shadow); }
+
+/* legacy aliases */
+.btn-cream { background: var(--pill); color: var(--white); border: none; }
+.btn-cream:hover { background: var(--pill-hover); }
+.btn-outline { background: var(--pill); color: var(--white); border: none; }
+.btn-outline:hover { background: var(--pill-hover); }
+
+/* ---------- hero (mobile-first) ---------- */
+.hero {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-copy {
+  order: 1;
+  min-width: 0;
+  max-width: 640px;
+  padding-top: clamp(var(--s-7), 4vw, var(--s-12));
+}
+.h-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 63px);
+  line-height: 1.06;
+  letter-spacing: -.5px;
+}
+.h-title .speech {
+  background: var(--grad-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.h-title .role { color: var(--white); }
+.h-body {
+  margin-top: var(--s-6);
+  width: min(634px, 100%);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 26px;
+  letter-spacing: 0.1px;
+  color: var(--text-soft);
+}
+.h-actions {
+  margin-top: var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.h-actions .btn { width: 100%; }
+
+/* person */
+.person {
+  order: 2;
+  align-self: center;
+  width: min(400px, 85vw);
+  height: auto;
+  max-width: 100%;
+  margin: var(--s-6) auto 0;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  filter: drop-shadow(0 26px 44px rgba(0, 0, 0, .45));
+  object-fit: contain;
+  /* mount appear — fade + soft rise, same ease as hero reveal */
+  animation: person-appear 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+/* fade up from below — pairs with hero copy/cards sliding in on load */
+@keyframes person-appear {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- right info cards ---------- */
+.info {
+  order: 3;
+  width: auto;
+  margin-top: var(--s-8);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-8);
+}
+/* whole card lifts on hover; icon + title respond for a layered feel */
+.info-card {
+  transition: transform var(--dur-slow) var(--ease-out);
+  will-change: transform;
+}
+.info-card:hover { transform: translateY(-4px); }
+.ic-icon {
+  width: 22px;
+  height: 22px;
+  margin-bottom: var(--s-3);
+  color: var(--cream);
+  opacity: .92;
+  transform-origin: left center;
+  transition: color var(--dur), opacity var(--dur),
+              transform var(--dur) var(--ease-out);
+}
+.info-card:hover .ic-icon {
+  color: var(--accent-1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+.ic-icon svg { width: 100%; height: 100%; display: block; }
+.ic-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--cream);
+  letter-spacing: .2px;
+  transition: color var(--dur);
+  text-wrap: balance;
+  max-width: 22ch;
+}
+.info-card:hover .ic-title { color: var(--accent-2); }
+.ic-sub {
+  margin-top: var(--s-2);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ===== small tablet: cards in a row ===== */
+@media (min-width: 600px) {
+  .info { grid-template-columns: repeat(3, 1fr); gap: var(--s-6); }
+}
+
+/*
+ * ===== desktop: 3-zone hero + frame =====
+ * Everything below scales on a SINGLE axis (viewport width / vw) so the
+ * mascot-to-text ratio stays locked at every screen size. Clamps cap the
+ * scale on ultrawide screens, preserving the reference "normal size" look.
+ * Spacing uses the 4-point token scale.
+ */
+@media (min-width: 1024px) {
+  .shell { padding-bottom: var(--s-14); }
+
+  /* nav rides ABOVE the frame's top hairline — single-line header bar in the
+     top band, not floated down to the side-gutter inset. */
+  .nav { flex-wrap: nowrap; gap: var(--s-4); padding-top: var(--s-7); }
+  .nav-links { order: 0; width: auto; gap: var(--s-3); margin-top: 0; }
+  .nav-links a { font-size: 13px; letter-spacing: 1px; padding: 11px 18px; }
+
+  .hero {
+    display: grid;
+    /* 3 zones, all sized RELATIVE to the rail (fr) — not the viewport —
+       so text / figure / cards keep their ratio and stay inside the column. */
+    grid-template-columns:
+      minmax(0, 1fr)        /* text  */
+      minmax(0, 1.15fr)     /* figure */
+      minmax(0, 0.82fr);    /* cards */
+    column-gap: clamp(var(--s-4), 2vw, var(--s-8));
+    align-items: stretch;
+    min-height: calc(100vh - 120px);
+    /* live in the SAME centered column as .wrap (sections) → side margins match */
+    max-width: var(--rail);
+    margin-inline: auto;
+  }
+  .hero-copy {
+    align-self: center;
+    max-width: none;
+    padding-top: 0;
+    transform: translateY(-12px);
+    /* flush to the rail's left edge — aligns "Speech AI" with "About" */
+    padding-left: 0;
+  }
+  /* title scales with the rail; capped so "Research Engineer" stays on one
+     line inside the text column without reaching the figure */
+  .h-title { font-size: clamp(49px, 3.5vw, 61px); line-height: 1.05; white-space: nowrap; }
+  .h-body {
+    margin-top: clamp(var(--s-5), 2vw, var(--s-7));
+    max-width: 430px;
+    font-size: clamp(12px, 1vw, 14px);
+  }
+  .h-actions {
+    flex-direction: row;
+    gap: var(--s-4);
+    margin-top: clamp(var(--s-7), 3vw, var(--s-10));
+  }
+  .h-actions .btn { width: auto; }
+
+  .person {
+    align-self: center;
+    justify-self: center;
+    /* capped so its width stays inside the centre column of the 1180 rail —
+       no overlap with the title (left) or the cards (right) */
+    height: clamp(480px, 38vw, 680px);
+    max-height: 78vh;
+    width: auto;
+    margin: 0;
+    filter: drop-shadow(0 30px 50px rgba(0, 0, 0, .45));
+    transform: translateX(-35px);
+    /* desktop appear keeps the -35px X offset through the rise */
+    animation-name: person-appear-desktop;
+  }
+  @keyframes person-appear-desktop {
+    from { opacity: 0; transform: translate(-35px, 28px); }
+    to   { opacity: 1; transform: translate(-35px, 0); }
+  }
+
+  .info {
+    align-self: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    /* flush to the rail's right edge — matches the section right margin */
+    padding-right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(var(--s-5), 1.6vw, var(--s-7));
+    width: 100%;
+  }
+}
+
+/* =====================================================================
+   SECTIONS (below the hero) — Amber Dusk, mobile-first.
+   Two-column / zig-zag upgrades live in the @media (min-width:768px) block.
+   ===================================================================== */
+
+/* centered reading column inside each full-width section */
+.wrap { max-width: var(--rail); margin: 0 auto; width: 100%; }
+
+/* small uppercase label used across sections */
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* generic section rhythm. The hairline divider lives on a centered, canvas-width
+   ::before so it ends exactly on the frame line at every width (instead of the
+   old full-shell border-top that overshot the frame on wide screens). */
+.section {
+  position: relative;
+  z-index: 2;
+  padding: clamp(3rem, 8vw, 6rem) 0;
+}
+.section::before,
+.impact::before,
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--canvas);
+  border-top: 1px solid var(--frame);
+  pointer-events: none;
+}
+
+/* ---- section header: 01 / 04 · Label ---- */
+.sec-head { margin-bottom: var(--s-8); }
+.sec-index {
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.sec-index .sec-num { color: var(--accent-1); }
+.sec-title {
+  margin-top: var(--s-3);
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -.5px;
+  color: var(--cream);
+}
+.sec-lead {
+  margin-top: var(--s-4);
+  max-width: 60ch;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+/* ---- tag chips (reuse the nav-pill look) ---- */
+.taglist {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.tag {
+  font-size: 12px;
+  letter-spacing: .4px;
+  color: var(--muted-2);
+  background: var(--pill);
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+  transition: background var(--dur), color var(--dur),
+              transform var(--dur-fast) var(--ease-out);
+}
+.tag:hover { background: var(--pill-hover); color: var(--cream); transform: translateY(-2px); }
+
+/* ===== IMPACT strip ===== */
+.impact {
+  position: relative;
+  z-index: 2;
+  padding: clamp(2.5rem, 6vw, 4rem) 0;
+}
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-7);
+}
+.stat {
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--frame);
+}
+.stat-num {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(34px, 7vw, 44px);
+  line-height: 1;
+  color: var(--cream);
+  letter-spacing: -.5px;
+}
+.stat-num .stat-unit {
+  font-size: .42em;
+  letter-spacing: .5px;
+  color: var(--accent-1);
+  margin-left: 3px;
+}
+.stat-label {
+  margin-top: var(--s-3);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 32ch;
+}
+.stat-tag {
+  display: inline-block;
+  margin-top: var(--s-3);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+/* ===== ABOUT ===== */
+.about-grid { display: grid; gap: var(--s-8); align-items: start; }
+.about-loc { margin-bottom: var(--s-5); }
+.about-body p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-soft);
+  max-width: 62ch;
+}
+/* paragraphs are each wrapped in a .rv-mask reveal span → space the wrappers */
+.about-body .rv-mask + .rv-mask { margin-top: var(--s-5); }
+.about-body strong { color: var(--cream); font-weight: 600; }
+.about-tags { margin-top: var(--s-7); }
+.about-tags .eyebrow { display: block; margin-bottom: var(--s-3); }
+
+/* ===== RESEARCH ===== */
+.research-sub {
+  margin: var(--s-10) 0 var(--s-5);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-1);
+}
+.research-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-8);
+}
+.rcard {
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--frame);
+}
+.rcard-metric {
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: .5px;
+  color: var(--accent-1);
+  margin-bottom: var(--s-3);
+}
+.rcard-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--cream);
+}
+.rcard-desc {
+  margin-top: var(--s-3);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+.rcard-why {
+  margin-top: var(--s-3);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  font-style: italic;
+}
+.rcard .taglist { margin-top: var(--s-4); }
+.research-note {
+  margin-top: var(--s-10);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ===== BUILDING / timeline ===== */
+.building-lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-soft);
+  max-width: 62ch;
+  margin-bottom: var(--s-10);
+}
+.building-lead strong { color: var(--cream); font-weight: 600; }
+.timeline { position: relative; }
+.tl-item {
+  position: relative;
+  padding: 0 0 var(--s-8) var(--s-7);
+  border-left: 1px solid var(--frame);
+}
+.timeline .rv-mask:last-child .tl-item { padding-bottom: 0; }
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+.tl-role {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--cream);
+}
+.tl-org { margin-top: 2px; font-size: 14px; color: var(--muted-2); }
+.tl-period {
+  margin-top: var(--s-1);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.tl-desc {
+  margin-top: var(--s-3);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-soft);
+  max-width: 60ch;
+}
+
+/* copy column + builder figure side by side — one column on mobile, the
+   figure tucked away until there's room for it on the right at ≥768px. */
+.building-grid { display: grid; grid-template-columns: 1fr; align-items: center; }
+.building-figure { display: none; margin: 0; }
+.builder-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  filter: drop-shadow(0 26px 44px rgba(0, 0, 0, .45));
+  object-fit: contain;
+}
+
+/* ===== EDUCATION ===== */
+/* Mobile-first: text block then a centered degree glyph. ≥768px it becomes a
+   two-column rail (text left, glyph vertically centered on the right) — same
+   ratio language as the Building section. */
+.edu-grid { display: flex; flex-direction: column; gap: var(--s-8); }
+.edu-main { min-width: 0; }
+/* hidden on mobile (orphaned with no companion column); shown ≥768px */
+.edu-figure { margin: 0; display: none; justify-content: center; }
+.edu-glyph {
+  display: block;
+  width: clamp(92px, 30vw, 148px);
+  color: var(--amber-lit);
+  filter: drop-shadow(0 10px 24px rgba(152, 56, 4, .35));
+}
+.edu-glyph svg { width: 100%; height: 100%; display: block; opacity: .5; }
+/* gradient fill overrides the icon's currentColor paths (presentation attrs
+   lose to author CSS); see #eduGrad def in page.tsx */
+.edu-glyph svg path { fill: url(#eduGrad); }
+
+.edu { display: grid; gap: 0; }
+.edu-item {
+  padding: var(--s-6) 0;
+  border-top: 1px solid var(--frame);
+}
+.edu .rv-mask:last-of-type .edu-item { border-bottom: 1px solid var(--frame); }
+.edu-deg {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--cream);
+}
+.edu-org { margin-top: var(--s-2); font-size: 14px; color: var(--muted-2); }
+.edu-meta { margin-top: var(--s-2); font-size: 13px; color: var(--muted); }
+.collab {
+  margin-top: var(--s-8);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.collab .eyebrow { display: block; margin-bottom: var(--s-2); }
+
+/* ===== TECH STACK — orbiting amber galaxy =====
+   Single intentional loop on the page (DESIGN.md §7); freezes flat under
+   reduced-motion. Monochrome amber/cream only — no second hue (§2). Below
+   768px the orbit is replaced by the categorised .ts-list grid (§6). */
+.techstack-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-10);
+  align-items: center;
+}
+.ts-copy { max-width: 52ch; }
+.ts-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) 0;
+  margin-top: var(--s-7);
+}
+.ts-legend-item {
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ts-legend-item:not(:last-child)::after {
+  content: "·";
+  margin: 0 var(--s-3);
+  color: var(--frame);
+}
+
+/* the right-hand stage — orbit hidden until there's room (≥768px) */
+.ts-stage {
+  display: none;
+  position: relative;
+  --stage: clamp(320px, 80vw, 520px);
+  width: var(--stage);
+  height: var(--stage);
+  margin: 0 auto;
+}
+
+/* static dashed orbit paths (the rings don't spin — only the nodes do) */
+.ts-paths { position: absolute; inset: 0; }
+.ts-path {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed var(--frame);
+  border-radius: 50%;
+}
+.ts-path-1 { width: calc(var(--stage) * 0.34); height: calc(var(--stage) * 0.34); }
+.ts-path-2 { width: calc(var(--stage) * 0.60); height: calc(var(--stage) * 0.60); }
+.ts-path-3 { width: calc(var(--stage) * 0.86); height: calc(var(--stage) * 0.86); }
+
+/* centre node — amber disc + hairline halo (a fill, not an outer-glow shadow) */
+.ts-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--grad-cta);
+}
+.ts-core::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid var(--frame);
+}
+
+/* each ring spins slowly; inner faster, alternating direction for depth */
+.ts-ring { position: absolute; inset: 0; transform-origin: center; }
+.ts-ring-1 { --r: calc(var(--stage) * 0.17); animation: ts-spin 56s linear infinite; }
+.ts-ring-2 { --r: calc(var(--stage) * 0.30); animation: ts-spin-rev 74s linear infinite; }
+.ts-ring-3 { --r: calc(var(--stage) * 0.43); animation: ts-spin 92s linear infinite; }
+
+/* the .ts-cell counter-rotates at the ring's exact speed so labels stay upright */
+.ts-ring-1 .ts-cell { animation: ts-spin-rev 56s linear infinite; }
+.ts-ring-2 .ts-cell { animation: ts-spin 74s linear infinite; }
+.ts-ring-3 .ts-cell { animation: ts-spin-rev 92s linear infinite; }
+
+/* 4-layer placement (keeps every chip upright with NO wobble):
+   spoke  → a zero-size point pushed out to the ring at angle --a
+   cell   → counter-spins around that point (origin 0 0) to undo the ring spin
+   chip   → centres itself on the point (translate -50%) and undoes the static
+            spoke angle (rotate -a), so it reads horizontally at every position */
+.ts-spoke {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--r)));
+}
+.ts-cell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.orbit-chip {
+  display: inline-block;
+  transform-origin: center;
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--a)));
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .3px;
+  line-height: 1;
+  color: var(--white);
+  background: var(--pill);
+  border: 1px solid var(--frame);
+  padding: 7px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: default;
+  transition: color var(--dur), background var(--dur), border-color var(--dur);
+}
+.orbit-chip:hover {
+  color: var(--cream);
+  background: var(--pill-hover);
+  border-color: rgba(250, 160, 51, .55);
+}
+
+@keyframes ts-spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+@keyframes ts-spin-rev {
+  from { transform: rotate(0); }
+  to { transform: rotate(-360deg); }
+}
+
+/* categorised list — the accessible source; visible layout on mobile */
+.ts-list { list-style: none; display: grid; gap: var(--s-6); }
+.ts-cat-label { display: block; margin-bottom: var(--s-3); }
+
+/* ===== MISSION → CTA (shader panel) ===== */
+.cta {
+  position: relative;
+  z-index: 2;
+  padding: clamp(2.5rem, 7vw, 5rem) 0;
+}
+/* the contained band that holds the animated shader — centered on the canvas
+   box so its top & bottom hairlines read as continuous y-lines with the frame
+   and section dividers (square corners, no radius, to match that language) */
+.cta-panel {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: var(--canvas);
+  margin-inline: auto;
+  min-height: clamp(360px, 56vh, 600px);
+  border-radius: 0;
+  border-top: 1px solid var(--frame);
+  border-bottom: 1px solid var(--frame);
+  background: var(--bg);
+  padding: clamp(var(--s-10), 9vw, 7rem) clamp(var(--s-5), 4vw, var(--s-10));
+}
+/* WebGL canvas fills the panel beneath the scrim + text — dimmed so the
+   plasma reads as atmosphere, not foreground */
+.cta-shader { z-index: 0; opacity: .72; }
+/* warm scrim: a flat darkening layer for readability + a radial vignette */
+.cta-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(26, 16, 0, .34), rgba(26, 16, 0, .34)),
+    radial-gradient(120% 140% at 50% 50%,
+      rgba(26, 16, 0, .12) 0%,
+      rgba(26, 16, 0, .50) 58%,
+      rgba(26, 16, 0, .80) 100%);
+}
+.cta-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-8);
+}
+.cta-quote {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(20px, 3.4vw, 34px);
+  line-height: 1.24;
+  letter-spacing: -.4px;
+  color: var(--cream);
+  max-width: 28ch;
+  text-wrap: balance;
+  text-shadow: 0 1px 30px rgba(26, 16, 0, .9);
+  text-align: center;
+  margin: 0 auto;
+}
+/* opening & closing quotation marks framing the quote (serif, dim amber) */
+.cta-mark {
+  color: var(--amber-lit);
+  opacity: .55;
+}
+.cta-nowrap { white-space: nowrap; }
+.cta-quote .em {
+  background: var(--grad-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-4);
+}
+.cta-actions .btn { width: 100%; }
+
+/* ===== CONTACT ===== */
+/* Monk asset anchored to the right edge of the contact band, vertically
+   centred behind the copy. Hidden on small screens where there's no room. */
+.contact-sec { position: relative; }
+.contact-monk {
+  display: none;
+  position: absolute;
+  right: clamp(0px, 4vw, 64px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(220px, 26vw, 340px);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+.contact-head {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(30px, 6vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -.5px;
+  color: var(--cream);
+}
+.contact-body {
+  margin-top: var(--s-5);
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-soft);
+}
+.contact-actions { margin-top: var(--s-7); }
+.contact-actions .btn { width: 100%; }
+.contact-links {
+  margin-top: var(--s-7);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+}
+.clink {
+  font-size: 13px;
+  letter-spacing: .5px;
+  color: var(--muted-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--frame);
+  padding-bottom: 2px;
+  transition: color var(--dur), border-color var(--dur);
+}
+.clink:hover { color: var(--cream); border-color: var(--accent-1); }
+.clink:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 3px; }
+
+/* ===== FOOTER =====
+   Full-width band: its hairline (shared .footer::before) meets the canvas/frame,
+   while its content sits on the .wrap rail so © + links align with the contact
+   copy directly above. */
+.footer {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(3rem, 7vw, 5rem);
+  padding: var(--s-8) 0 var(--s-2);
+}
+.footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  align-items: center;
+  justify-content: space-between;
+}
+.foot-copy { font-size: 12px; color: var(--muted); }
+.foot-links { display: flex; flex-wrap: wrap; gap: var(--s-5); }
+.foot-links a {
+  position: relative;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--dur);
+}
+/* underline grows left→right on hover */
+.foot-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background: var(--accent-1);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur) var(--ease-out);
+}
+.foot-links a:hover { color: var(--cream); }
+.foot-links a:hover::after { transform: scaleX(1); }
+.foot-links a:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 3px; }
+
+/* ===== tablet / desktop: two-column + zig-zag ===== */
+@media (min-width: 768px) {
+  /* blueprint frame appears from iPad up, locked to the content rail */
+  .frame { display: block; }
+
+  /* nav lives ABOVE the frame's top hairline (frame top = --s-24 / 96px):
+     centered in the top band so it reads as a header bar over the canvas. */
+  .nav { padding-top: var(--s-7); }
+
+  .impact-grid { grid-template-columns: repeat(4, 1fr); gap: var(--s-8); }
+
+  /* About: label + tags left, body right — bias width to the reading column */
+  .about-grid {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    gap: clamp(var(--s-8), 5vw, var(--s-16));
+  }
+
+  /* Research: 2-col zig-zag — the right column steps down a beat */
+  .research-grid { grid-template-columns: repeat(2, 1fr); gap: var(--s-10) var(--s-12); }
+  .research-grid > .rcard:nth-child(even) { margin-top: var(--s-12); }
+
+  /* Building: copy left, builder figure pinned to the right rail */
+  .building-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(220px, 26vw, 320px);
+    gap: clamp(var(--s-5), 3vw, var(--s-8));
+  }
+  .building-figure {
+    display: block;
+    justify-self: end;
+    align-self: center;
+    transform: translateX(-50px);
+  }
+
+  /* Education: text block left, degree glyph on the right rail (top-aligned so
+     it heads the column rather than floating in the whitespace) */
+  .edu-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(120px, 18vw, 200px);
+    gap: clamp(var(--s-10), 6vw, var(--s-16));
+    align-items: start;
+  }
+  .edu-figure {
+    display: block;
+    justify-self: end;
+    align-self: start;
+    margin-top: var(--s-5);   /* 20px top margin */
+    margin-right: var(--s-4); /* 16px right margin */
+  }
+  .edu-glyph { width: clamp(120px, 16vw, 180px); }
+
+  /* Tech Stack: copy rail left, orbit stage right (even columns; stage tracks
+     its cell so it fills without overflowing the rail) */
+  .techstack-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s-10), 6vw, var(--s-16));
+  }
+  .ts-stage { display: block; --stage: clamp(300px, 42vw, 560px); justify-self: center; }
+  /* keep the ordered list available to screen-readers, hide it visually */
+  .ts-list {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .cta-quote { font-size: clamp(26px, 3.2vw, 40px); max-width: min(46ch, 100%); }
+  .cta-actions .btn { width: auto; }
+
+  .contact-actions .btn { width: auto; }
+}
+
+@media (min-width: 1081px) {
+  .sec-title { font-size: clamp(38px, 3.4vw, 52px); }
+  .research-grid { gap: var(--s-12) clamp(var(--s-12), 5vw, var(--s-20)); }
+
+  /* About: let the wide rail flow to the reading column, not the sparse label */
+  .about-grid { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr); }
+
+  /* wide enough for the original two-up degree layout beside the glyph */
+  .edu { grid-template-columns: 1fr 1fr; gap: 0 var(--s-10); }
+  .edu .rv-mask:last-of-type .edu-item { border-bottom: none; }
+
+  /* Contact: monk only where there's real room. Reserve TRACKS the image
+     (--monk + breathing) and the monk anchors just inside the rail's right
+     edge, so the copy reaches toward it instead of leaving a dead band. */
+  .contact-sec { --monk: clamp(200px, 20vw, 320px); }
+  .contact-monk {
+    display: block;
+    width: var(--monk);
+    right: max(var(--frame-gap), calc((100% - var(--rail)) / 2 + var(--frame-gap)));
+  }
+  .contact-sec .wrap { padding-right: calc(var(--monk) + var(--s-12)); }
+  .contact-body { max-width: min(64ch, 100%); }
+}
+
+/* ===== reduced motion: drop transform-based micro-interactions =====
+   Colour/background still transition (cheap, non-vestibular); all lifts,
+   scales and underline sweeps collapse to instant for affected users.   */
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover,
+  .btn:active,
+  .nav-links a:hover,
+  .nav-contact:hover,
+  .tag:hover,
+  .info-card:hover,
+  .info-card:hover .ic-icon {
+    transform: none;
+  }
+  .foot-links a::after { transition: none; }
+  /* freeze the galaxy flat — nodes stay at their t=0 (upright) positions */
+  .ts-ring,
+  .ts-ring .ts-cell { animation: none; }
+  /* person appears instantly — no fade/rise */
+  .person { animation: none; opacity: 1; }
+}
+
+/* =====================================================================
+   BLOG — /blogs index + /blogs/[slug] detail. Amber Dusk, editorial.
+   ===================================================================== */
+.blog-wrap { max-width: 880px; margin: 0 auto; width: 100%; }
+
+/* ---- index header ---- */
+.blog-head {
+  padding: clamp(2.5rem, 7vw, 5rem) clamp(var(--s-6), 5vw, var(--s-12)) clamp(2rem, 5vw, 3rem);
+  border-bottom: 1px solid var(--frame);
+}
+.blog-head .eyebrow { display: block; margin-bottom: var(--s-4); }
+.blog-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(38px, 8vw, 66px);
+  line-height: 1.02;
+  letter-spacing: -.5px;
+  color: var(--cream);
+}
+.blog-title .em {
+  background: var(--grad-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.blog-lead {
+  margin-top: var(--s-5);
+  max-width: 60ch;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+/* ---- shared meta row ---- */
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.post-meta .dot { color: var(--frame); }
+.post-meta time { color: var(--muted-2); }
+
+/* ---- category label (readme-style, left of title) ---- */
+.lcat {
+  display: block;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.lcat-accent { color: var(--accent-1); }
+
+/* ---- the ledger: vertical side lines bound the column ---- */
+.ledger {
+  position: relative;
+  max-width: 1080px;
+  margin: var(--s-8) auto 0;
+  border: 1px solid var(--frame);
+  border-bottom: none;          /* the rows supply the closing rule */
+}
+
+/* ---- featured post — full ledger width ---- */
+.lfeature {
+  display: block;
+  text-decoration: none;
+  padding: clamp(var(--s-8), 5vw, var(--s-14)) clamp(var(--s-6), 5vw, var(--s-12));
+  border-bottom: 1px solid var(--frame);
+}
+.lfeature .lcat { margin-bottom: var(--s-4); }
+.lfeature-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -.5px;
+  color: var(--cream);
+  transition: color var(--dur);
+}
+.lfeature:hover .lfeature-title { color: var(--accent-2); }
+.lfeature-excerpt {
+  margin-top: var(--s-5);
+  max-width: 60ch;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-soft);
+}
+.lfeature .post-meta { margin-top: var(--s-6); }
+.lfeature .taglist { margin-top: var(--s-5); }
+
+/* ---- ruled rows: [category + meta rail | post body] ---- */
+.lrow {
+  display: grid;
+  grid-template-columns: 1fr;
+  text-decoration: none;
+  border-bottom: 1px solid var(--frame);
+}
+.lmeta { padding: clamp(var(--s-6), 4vw, var(--s-8)) clamp(var(--s-6), 5vw, var(--s-12)) 0; }
+.lmeta-stack { margin-top: var(--s-2); }
+.lcontent { padding: var(--s-3) clamp(var(--s-6), 5vw, var(--s-12)) clamp(var(--s-6), 4vw, var(--s-8)); }
+.lrow-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.2;
+  color: var(--cream);
+  transition: color var(--dur);
+}
+.lrow:hover .lrow-title { color: var(--accent-2); }
+.lrow-excerpt {
+  margin-top: var(--s-3);
+  max-width: 60ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.lrow .taglist { margin-top: var(--s-4); }
+
+/* ---- post detail (article) ---- */
+.article {
+  max-width: 760px;
+  margin: var(--s-8) auto 0;
+  border: 1px solid var(--frame);
+  padding: clamp(2rem, 6vw, 4rem) clamp(var(--s-6), 5vw, var(--s-12)) clamp(3rem, 7vw, 5rem);
+}
+.article-back {
+  display: inline-block;
+  margin-bottom: var(--s-8);
+  font-size: 13px;
+  letter-spacing: .5px;
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color var(--dur);
+}
+.article-back:hover { color: var(--cream); }
+.article-meta { margin-bottom: var(--s-5); }
+.article-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(32px, 6vw, 52px);
+  line-height: 1.06;
+  letter-spacing: -.5px;
+  color: var(--cream);
+}
+.article-tags { margin-top: var(--s-6); }
+.article-body { margin-top: var(--s-10); }
+.article-body p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--text-soft);
+  max-width: 68ch;
+}
+.article-body p + p { margin-top: var(--s-6); }
+.article-foot {
+  margin-top: var(--s-14);
+  padding-top: var(--s-8);
+  border-top: 1px solid var(--frame);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+/* ---- tablet/desktop: meta rail + interior side line ---- */
+@media (min-width: 768px) {
+  .lrow { grid-template-columns: 248px 1fr; }
+  .lmeta {
+    padding: clamp(var(--s-8), 3vw, var(--s-10)) clamp(var(--s-5), 2.5vw, var(--s-8));
+  }
+  .lmeta-stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-2);
+    margin-top: var(--s-4);
+  }
+  .lcontent {
+    border-left: 1px solid var(--frame);   /* interior side line */
+    padding: clamp(var(--s-8), 3vw, var(--s-10)) clamp(var(--s-8), 4vw, var(--s-12));
+  }
+}

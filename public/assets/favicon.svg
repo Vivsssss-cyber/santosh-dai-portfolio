@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Warm Amber Black Canvas -->
+  <rect width="64" height="64" rx="14" fill="#1a1000"/>
+  
+  <!-- Sleek Hairline Technical Frame (matching the site's frame) -->
+  <rect x="4" y="4" width="56" height="56" rx="10" stroke="rgba(176, 164, 142, 0.2)" stroke-width="1" fill="none"/>
+  
+  <!-- Corner Plus (+) Registration Marks -->
+  <!-- Top Left (Center at 4,4) -->
+  <path d="M1 4h6M4 1v6" stroke="rgba(176, 164, 142, 0.4)" stroke-width="1"/>
+  <!-- Top Right (Center at 60,4) -->
+  <path d="M57 4h6M60 1v6" stroke="rgba(176, 164, 142, 0.4)" stroke-width="1"/>
+  <!-- Bottom Left (Center at 4,60) -->
+  <path d="M1 60h6M4 57v6" stroke="rgba(176, 164, 142, 0.4)" stroke-width="1"/>
+  <!-- Bottom Right (Center at 60,60) -->
+  <path d="M57 60h6M60 57v6" stroke="rgba(176, 164, 142, 0.4)" stroke-width="1"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="favGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c35108" />
+      <stop offset="100%" stop-color="#fbc27d" />
+    </linearGradient>
+  </defs>
+
+  <!-- Central Pixelated Serif 'S' (Redaction inspired) in brand gradient -->
+  <g fill="url(#favGrad)">
+    <!-- Row 0: y=12 -->
+    <rect x="20" y="12" width="24" height="4" />
+    
+    <!-- Row 1: y=16 -->
+    <rect x="16" y="16" width="32" height="4" />
+    
+    <!-- Row 2: y=20 -->
+    <rect x="12" y="20" width="12" height="4" />
+    <rect x="40" y="20" width="12" height="4" />
+    
+    <!-- Row 3: y=24 -->
+    <rect x="12" y="24" width="12" height="4" />
+    
+    <!-- Row 4: y=28 -->
+    <rect x="16" y="28" width="24" height="4" />
+    
+    <!-- Row 5: y=32 -->
+    <rect x="24" y="32" width="24" height="4" />
+    
+    <!-- Row 6: y=36 -->
+    <rect x="36" y="36" width="16" height="4" />
+    
+    <!-- Row 7: y=40 -->
+    <rect x="40" y="40" width="12" height="4" />
+    <rect x="12" y="40" width="12" height="4" />
+    
+    <!-- Row 8: y=44 -->
+    <rect x="16" y="44" width="32" height="4" />
+    
+    <!-- Row 9: y=48 -->
+    <rect x="20" y="48" width="24" height="4" />
+  </g>
+</svg>
