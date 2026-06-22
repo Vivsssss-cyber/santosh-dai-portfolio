@@ -121,34 +121,7 @@ export function Nav() {
         <Link className="brand" href="/">
           <span className="brand-mark">Santosh Dahal</span>
         </Link>
-        <div className="nav-links">
-          {LINKS.map((l) => {
-            const on = active === l.id;
-            return (
-              <a
-                key={l.id}
-                href={href(l.id)}
-                aria-current={on ? "true" : undefined}
-              >
-                <span className="nav-label">{l.label}</span>
-              </a>
-            );
-          })}
-          <Link href="/blogs">
-            <span className="nav-label">WRITING</span>
-          </Link>
-          <Link href="/memories">
-            <span className="nav-label">MEMORIES</span>
-          </Link>
-        </div>
         <div className="nav-actions">
-          <a
-            href={href("contact")}
-            className="nav-contact"
-            aria-current={active === "contact" ? "true" : undefined}
-          >
-            CONTACT ME
-          </a>
           <button
             type="button"
             className="nav-toggle"
@@ -164,7 +137,8 @@ export function Nav() {
         </div>
       </nav>
 
-      {/* Mobile drawer + scrim. Always mounted; CSS slides it in on `.is-open`
+      {/* Drawer + scrim — the sole menu at every breakpoint. Always mounted; CSS
+          slides it in on `.is-open`
           and `inert` keeps the links out of the tab order while closed. */}
       <div
         className={"mobile-scrim" + (open ? " is-open" : "")}

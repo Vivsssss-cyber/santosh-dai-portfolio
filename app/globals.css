@@ -553,11 +553,7 @@ body {
   /* nav rides ABOVE the frame's top hairline — single-line header bar in the
      top band, not floated down to the side-gutter inset. */
   .nav { flex-wrap: nowrap; gap: var(--s-4); padding-top: var(--s-7); }
-  .nav-links { order: 0; width: auto; display: flex; gap: var(--s-3); margin-top: 0; }
-  .nav-links a { font-size: 13px; letter-spacing: 1px; padding: 11px 18px; }
-  .nav-contact { display: inline-block; }   /* back inline beside the link row */
-  .nav-toggle { display: none; }            /* desktop uses the inline nav, no hamburger */
-  .mobile-menu, .mobile-scrim { display: none; }
+  /* hamburger drawer is the menu at EVERY size — no inline link row on desktop */
 
   .hero {
     display: grid;
