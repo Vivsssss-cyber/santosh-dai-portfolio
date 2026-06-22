@@ -12,6 +12,7 @@ export function SiteFooter() {
             LinkedIn
           </a>
           <a href="/blogs">Writing</a>
+          <a href="/memories">Memories</a>
           <a href="/#contact">Contact</a>
         </nav>
       </div>

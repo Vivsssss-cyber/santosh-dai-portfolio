@@ -181,7 +181,7 @@ body {
 .nav-links {
   order: 3;
   width: 100%;
-  display: flex;
+  display: none;   /* mobile: links live in the drawer; restored inline at ≥1024 */
   align-items: center;
   justify-content: flex-start;   /* align wrapped link row to the rail edge */
   flex-wrap: wrap;
@@ -209,8 +209,9 @@ body {
 }
 .nav-links a:active { transform: translateY(0); }
 .nav-links a:focus-visible { outline: none; box-shadow: var(--ring); }
-.nav-actions { flex: 1; display: flex; justify-content: flex-end; }
+.nav-actions { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: var(--s-3); }
 .nav-contact {
+  display: none;   /* mobile: contact lives in the drawer; restored at ≥1024 */
   color: var(--white);
   text-decoration: none;
   font-size: 13px;
@@ -231,6 +232,111 @@ body {
 }
 .nav-contact:active { transform: translateY(0); }
 .nav-contact:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* ---- mobile hamburger toggle (shown < 1024px; hidden on desktop) ---- */
+.nav-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--pill);
+  color: var(--cream);
+  cursor: pointer;
+  transition: background var(--dur);
+}
+.nav-toggle:hover { background: var(--pill-hover); }
+.nav-toggle:focus-visible { outline: none; box-shadow: var(--ring); }
+.nav-toggle-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform var(--dur) var(--ease-out), opacity var(--dur-fast);
+}
+/* open → morph the three bars into an X */
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* lift the bar above the scrim while open so the X stays tappable to close */
+.nav--menu-open { z-index: 60; }
+
+/* ---- mobile drawer + scrim ---- */
+.mobile-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, .55);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;          /* closed: invisible + click-through */
+  transition: opacity var(--dur) var(--ease-out);
+}
+.mobile-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  width: min(82vw, 340px);
+  height: 100dvh;
+  padding: calc(var(--s-20) + var(--s-2)) var(--s-6) var(--s-8);
+  background: #20160a;            /* lifted a step off --bg so it reads as a sheet */
+  border-left: 1px solid var(--frame);
+  box-shadow: -24px 0 60px -24px rgba(0, 0, 0, .75);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform: translateX(100%);   /* parked off the right edge until opened */
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.mobile-menu.is-open { transform: translateX(0); }
+.mobile-menu a {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .6px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  transition: background var(--dur), color var(--dur);
+}
+.mobile-menu a:hover,
+.mobile-menu a[aria-current="true"] {
+  background: var(--pill);
+  color: var(--cream);
+}
+.mobile-menu a:focus-visible { outline: none; box-shadow: var(--ring); }
+.mobile-menu-divider {
+  height: 1px;
+  margin: var(--s-3) var(--s-2);
+  background: var(--frame);
+}
+.mobile-menu .mobile-contact {
+  margin-top: var(--s-2);
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #fff;
+  background: var(--grad-cta);
+  box-shadow: var(--shadow-cta);
+}
+.mobile-menu .mobile-contact:hover {
+  color: #fff;
+  box-shadow: var(--shadow-cta-hover);
+}
 
 /* ---- scrollspy: top progress bar + active-section indicator ---- */
 /* thin hairline that fills (scaleX 0→1) as the page scrolls */
@@ -447,8 +553,11 @@ body {
   /* nav rides ABOVE the frame's top hairline — single-line header bar in the
      top band, not floated down to the side-gutter inset. */
   .nav { flex-wrap: nowrap; gap: var(--s-4); padding-top: var(--s-7); }
-  .nav-links { order: 0; width: auto; gap: var(--s-3); margin-top: 0; }
+  .nav-links { order: 0; width: auto; display: flex; gap: var(--s-3); margin-top: 0; }
   .nav-links a { font-size: 13px; letter-spacing: 1px; padding: 11px 18px; }
+  .nav-contact { display: inline-block; }   /* back inline beside the link row */
+  .nav-toggle { display: none; }            /* desktop uses the inline nav, no hamburger */
+  .mobile-menu, .mobile-scrim { display: none; }
 
   .hero {
     display: grid;
@@ -1267,6 +1376,10 @@ body {
   .nav--hidden { transform: none; }
   /* brand inversion still happens, just no wipe — snaps instantly */
   .brand-mark { transition: none; }
+  /* hamburger morph snaps instead of animating */
+  .nav-toggle-bar { transition: none; }
+  /* drawer + scrim appear instantly, no slide/fade */
+  .mobile-menu, .mobile-scrim { transition: none; }
   /* progress bar still tracks the user's own scroll (not autonomous), so it stays */
   /* freeze the galaxy flat — nodes stay at their t=0 (upright) positions */
   .ts-ring,
@@ -1534,4 +1647,256 @@ body {
     gap: var(--s-2);
     margin-top: var(--s-4);
   }
+}
+
+/* =====================================================================
+   MEMORIES — /memories infinite-scroll studio gallery.
+   Same Amber Dusk shell as the blog: header on the rail, gallery on the
+   rail, hairline divider meets the frame. Tiles reveal with the shared
+   mask-slide (RevealMedia); hover paints studio crop-marks + an open ring;
+   click opens a lightbox. DESIGN.md §4/§5/§7.
+   ===================================================================== */
+.mem-head {
+  position: relative;
+  max-width: var(--rail);
+  margin: 0 auto;
+  padding: clamp(4.5rem, 12vw, 8rem) 0 clamp(2rem, 5vw, 3rem);
+}
+.mem-head .eyebrow { display: block; margin-bottom: var(--s-5); }
+.mem-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(40px, 8.4vw, 72px);
+  line-height: 1.0;
+  letter-spacing: -.5px;
+  color: var(--cream);
+}
+.mem-title .em {
+  background: var(--grad-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.mem-lead {
+  margin-top: var(--s-6);
+  max-width: 56ch;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+/* canvas-width hairline between header and gallery — meets the frame line,
+   mirroring .section::before */
+.mem-sep {
+  position: relative;
+  height: 0;
+  max-width: var(--rail);
+  margin: 0 auto clamp(var(--s-8), 5vw, var(--s-12));
+}
+.mem-sep::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--canvas);
+  border-top: 1px solid var(--frame);
+  pointer-events: none;
+}
+
+.mem-wrap { max-width: var(--rail); margin: 0 auto; width: 100%; }
+
+/* masonry columns — JS-distributed (see MemoriesGallery) so infinite-append
+   doesn't reflow already-placed tiles the way CSS multicol would */
+.mem-gallery { display: flex; gap: var(--s-5); align-items: flex-start; }
+.mem-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--s-5); }
+.mem-tile { display: block; }
+
+/* one tile — a borderless studio plate that lifts on hover */
+.mem-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--frame);
+  border-radius: var(--radius);
+  background: var(--pill);
+  overflow: hidden;
+  cursor: pointer;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur),
+              box-shadow var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+}
+.mem-card:hover { transform: translateY(-3px); border-color: rgba(250, 160, 51, .45); box-shadow: var(--lift-shadow); }
+.mem-card:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.mem-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform var(--dur-slow) var(--ease-out), filter var(--dur) var(--ease-out);
+}
+.mem-card:hover .mem-img { transform: scale(1.05); filter: brightness(.82); }
+
+/* warm veil — fades in to seat the caption + crop-marks legibly */
+.mem-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to top, rgba(26, 16, 0, .74) 0%, rgba(26, 16, 0, .14) 44%, transparent 72%);
+  transition: opacity var(--dur) var(--ease-out);
+}
+.mem-card:hover .mem-veil { opacity: 1; }
+
+/* studio crop-marks — amber L-brackets at each corner, echoing the .plus frame */
+.mem-corners { position: absolute; inset: 10px; z-index: 2; pointer-events: none; }
+.mem-corners i {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid var(--amber-lit);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+}
+.mem-corners .tl { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; transform: translate(5px, 5px); }
+.mem-corners .tr { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; transform: translate(-5px, 5px); }
+.mem-corners .bl { bottom: 0; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; transform: translate(5px, -5px); }
+.mem-corners .br { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; transform: translate(-5px, -5px); }
+.mem-card:hover .mem-corners i { opacity: .9; transform: translate(0, 0); }
+
+/* open indicator — amber ring + outward arrow, centered */
+.mem-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(250, 160, 51, .7);
+  border-radius: 50%;
+  color: var(--amber-lit);
+  background: rgba(26, 16, 0, .3);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+}
+.mem-arrow svg { width: 18px; height: 18px; }
+.mem-card:hover .mem-arrow { opacity: 1; transform: scale(1); }
+
+/* caption — serif title, rises from the lower-left on hover */
+.mem-cap {
+  position: absolute;
+  left: var(--s-4);
+  right: var(--s-4);
+  bottom: var(--s-4);
+  z-index: 3;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--cream);
+  text-align: left;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+}
+.mem-card:hover .mem-cap { opacity: 1; transform: translateY(0); }
+
+/* infinite-scroll trigger + end note */
+.mem-sentinel { width: 100%; height: 1px; }
+.mem-end {
+  margin-top: clamp(var(--s-10), 6vw, var(--s-16));
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: .5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ===== lightbox ===== */
+.mem-lb {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(var(--s-10), 6vw, var(--s-20));
+  background: rgba(15, 9, 0, .86);
+  backdrop-filter: blur(6px);
+}
+.mem-lb-img {
+  max-width: min(100%, 1100px);
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--frame);
+  border-radius: var(--radius);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8);
+}
+.mem-lb-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(var(--s-5), 4vw, var(--s-10));
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--muted-2);
+}
+.mem-lb-close,
+.mem-lb-nav {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--frame);
+  background: rgba(26, 16, 0, .5);
+  color: var(--cream);
+  cursor: pointer;
+  transition: background var(--dur), border-color var(--dur), color var(--dur);
+}
+.mem-lb-close:hover,
+.mem-lb-nav:hover { background: var(--pill-hover); border-color: rgba(250, 160, 51, .55); color: var(--amber-lit); }
+.mem-lb-close:focus-visible,
+.mem-lb-nav:focus-visible { outline: none; box-shadow: var(--ring); }
+.mem-lb-close { top: clamp(var(--s-4), 3vw, var(--s-8)); right: clamp(var(--s-4), 3vw, var(--s-8)); }
+.mem-lb-nav.prev { left: clamp(var(--s-3), 2vw, var(--s-8)); top: 50%; margin-top: -22px; }
+.mem-lb-nav.next { right: clamp(var(--s-3), 2vw, var(--s-8)); top: 50%; margin-top: -22px; }
+.mem-lb-close svg,
+.mem-lb-nav svg { width: 18px; height: 18px; }
+
+@media (max-width: 599px) {
+  .mem-cap { font-size: 13px; }
+  .mem-arrow { width: 38px; height: 38px; margin: -19px 0 0 -19px; }
+}
+
+/* reduced motion: keep hover affordances visible, drop the moving parts */
+@media (prefers-reduced-motion: reduce) {
+  .mem-card,
+  .mem-card:hover,
+  .mem-img,
+  .mem-corners i,
+  .mem-arrow,
+  .mem-cap { transition: none; transform: none; }
+  .mem-card:hover .mem-img { transform: none; filter: brightness(.82); }
+  .mem-card:hover .mem-corners i,
+  .mem-card:hover .mem-arrow,
+  .mem-card:hover .mem-cap { opacity: 1; transform: none; }
 }

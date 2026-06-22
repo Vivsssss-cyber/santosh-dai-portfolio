@@ -184,7 +184,7 @@ export default function Home() {
               <RevealItem>
                 <SectionHead
                   num="03"
-                  label="Building"
+                  label="Professional"
                   lead="Carrying AI from prototype to production — leading teams and shipping systems real users depend on."
                 />
               </RevealItem>
@@ -244,6 +244,8 @@ export default function Home() {
                   src="/assets/builder.webp"
                   alt=""
                   aria-hidden="true"
+                  width={328}
+                  height={697}
                   loading="lazy"
                   decoding="async"
                 />

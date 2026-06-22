@@ -19,7 +19,7 @@ import {
 const LINKS = [
   { id: "about", label: "ABOUT" },
   { id: "research", label: "RESEARCH" },
-  { id: "building", label: "BUILDING" },
+  { id: "building", label: "PROFESSIONAL" },
   { id: "education", label: "EDUCATION" },
   { id: "stack", label: "STACK" },
 ] as const;
@@ -29,6 +29,27 @@ export function Nav() {
   const pathname = usePathname();
   const onHome = pathname === "/";
   const [active, setActive] = useState<string>("");
+  const [open, setOpen] = useState(false);
+
+  // Close the mobile drawer on route change so a tapped link never leaves it open.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // While open: Escape closes, and the page behind is scroll-locked.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   // From home, anchors stay same-page (#id) so the browser smooth-scrolls; from
   // anywhere else they carry the route (/#id) so they navigate then scroll.
@@ -59,7 +80,8 @@ export function Nav() {
       lastY.current = y;
     }
   });
-  const navClass = hidden ? "nav nav--hidden" : "nav";
+  const navClass =
+    (hidden ? "nav nav--hidden" : "nav") + (open ? " nav--menu-open" : "");
 
   useEffect(() => {
     if (!onHome) {
@@ -115,6 +137,9 @@ export function Nav() {
           <Link href="/blogs">
             <span className="nav-label">WRITING</span>
           </Link>
+          <Link href="/memories">
+            <span className="nav-label">MEMORIES</span>
+          </Link>
         </div>
         <div className="nav-actions">
           <a
@@ -124,8 +149,62 @@ export function Nav() {
           >
             CONTACT ME
           </a>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="nav-toggle-bar" />
+            <span className="nav-toggle-bar" />
+            <span className="nav-toggle-bar" />
+          </button>
         </div>
       </nav>
+
+      {/* Mobile drawer + scrim. Always mounted; CSS slides it in on `.is-open`
+          and `inert` keeps the links out of the tab order while closed. */}
+      <div
+        className={"mobile-scrim" + (open ? " is-open" : "")}
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
+      <div
+        id="mobile-menu"
+        className={"mobile-menu" + (open ? " is-open" : "")}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site menu"
+        inert={!open}
+      >
+        {LINKS.map((l) => (
+          <a
+            key={l.id}
+            href={href(l.id)}
+            onClick={() => setOpen(false)}
+            aria-current={active === l.id ? "true" : undefined}
+          >
+            {l.label}
+          </a>
+        ))}
+        <Link href="/blogs" onClick={() => setOpen(false)}>
+          WRITING
+        </Link>
+        <Link href="/memories" onClick={() => setOpen(false)}>
+          MEMORIES
+        </Link>
+        <span className="mobile-menu-divider" aria-hidden="true" />
+        <a
+          href={href("contact")}
+          className="mobile-contact"
+          onClick={() => setOpen(false)}
+          aria-current={active === "contact" ? "true" : undefined}
+        >
+          CONTACT ME
+        </a>
+      </div>
     </>
   );
 }
