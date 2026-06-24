@@ -5,6 +5,7 @@ import { RevealGroup, RevealLine } from "@/components/RevealText";
 import { Reveal, RevealItem, RevealMedia, RevealImg } from "@/components/Reveal";
 import { SectionHead, TagList } from "@/components/Section";
 import { Nav } from "@/components/Nav";
+import { Person } from "@/components/Person";
 import { TechStack } from "@/components/TechStack";
 import ShaderBackground from "@/components/ui/shader-background";
 import ResearchExplorer from "@/components/ui/research-explorer";
@@ -57,21 +58,9 @@ export default function Home() {
             </RevealLine>
           </RevealGroup>
 
-          {/* PERSON — spinning 3D avatar, background matted out.
-              webm = true alpha (Chrome/Edge/FF); mp4 = feathered fallback (Safari/iOS);
-              poster = static still for load / no-JS. */}
-          <video
-            className="person"
-            autoPlay
-            loop
-            muted
-            playsInline
-            poster="/assets/person.webp"
-            aria-label="Santosh Dahal — 3D avatar, rotating"
-          >
-            <source src="/assets/person.webm" type="video/webm" />
-            <source src="/assets/person.mp4" type="video/mp4" />
-          </video>
+          {/* PERSON — spinning alpha video on Blink/Gecko; transparent still on
+              WebKit (no alpha-video support). See components/Person.tsx. */}
+          <Person />
 
           {/* RIGHT INFO CARDS */}
           <RevealGroup as="aside" className="info">

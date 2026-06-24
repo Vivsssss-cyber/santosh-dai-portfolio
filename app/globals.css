@@ -479,6 +479,20 @@ body {
   animation: person-appear 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
 
+/* Safari paints a start-playback / controls overlay on a muted inline <video>
+   whenever autoplay is suspended (Low Power Mode, "never auto-play" setting).
+   WebKit is routed to the still image in Person.tsx, but nuke the overlay too
+   so a mis-detected engine can never show the play button or matte chrome. */
+.person::-webkit-media-controls,
+.person::-webkit-media-controls-enclosure,
+.person::-webkit-media-controls-panel,
+.person::-webkit-media-controls-overlay-play-button,
+.person::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* fade up from below — pairs with hero copy/cards sliding in on load */
 @keyframes person-appear {
   from { opacity: 0; transform: translateY(28px); }
