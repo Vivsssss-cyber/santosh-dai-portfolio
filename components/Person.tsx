@@ -2,22 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 
+type Mode = "video" | "anim" | "static";
+
 /**
  * Hero avatar. Alpha-channel video support is split across engines, so we pick
  * the render path at runtime:
  *   • Blink / Gecko (Chrome, Edge, Firefox) decode VP8/VP9 alpha in WebM →
  *     play the rotating cut-out with a real transparent background.
- *   • WebKit (Safari macOS + every iOS browser) has no transparent-WebM and no
- *     HEVC-with-alpha asset here — the only mp4 is opaque H.264. Playing it
- *     shows a dark box plus Safari's start-playback button. Serve the
- *     transparent still (person.webp is RGBA) instead: no box, no overlay.
+ *   • WebKit (Safari macOS + every iOS browser) can't decode transparent WebM
+ *     and we have no HEVC-with-alpha asset (can't encode it off a Mac). The mp4
+ *     is opaque H.264 — playing it shows a dark box + Safari's start-playback
+ *     button. Instead serve an animated transparent WebP (person-anim.webp,
+ *     RGBA, loops natively as an <img>): same rotation, no box, no overlay.
+ *   • Reduced-motion on WebKit → the static still (person.webp).
  *
- * SSR / first paint render the <video>, but with playback JS-driven (no
- * autoPlay attribute) and a transparent poster, so WebKit never auto-starts the
- * opaque mp4 before the effect swaps it out — no dark-box flash.
+ * SSR / first paint render the <video>, but playback is JS-driven (no autoPlay
+ * attribute) with a transparent poster, so WebKit never auto-starts the opaque
+ * mp4 before the effect swaps it out — no dark-box flash.
  */
 export function Person() {
-  const [stillOnly, setStillOnly] = useState(false);
+  const [mode, setMode] = useState<Mode>("video");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -27,7 +31,8 @@ export function Person() {
     const isWebKit = /AppleWebKit/.test(ua) && !isBlink && !isGecko;
 
     if (isWebKit) {
-      setStillOnly(true);
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setMode(reduce ? "static" : "anim");
       return;
     }
 
@@ -36,13 +41,13 @@ export function Person() {
     videoRef.current?.play().catch(() => {});
   }, []);
 
-  if (stillOnly) {
+  if (mode !== "video") {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         className="person"
-        src="/assets/person.webp"
-        alt="Santosh Dahal — 3D avatar"
+        src={mode === "anim" ? "/assets/person-anim.webp" : "/assets/person.webp"}
+        alt="Santosh Dahal — 3D avatar, rotating"
         decoding="async"
       />
     );
