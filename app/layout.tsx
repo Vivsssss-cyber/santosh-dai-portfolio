@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./tokens.css";
 import "./globals.css";
+import { MarriedLifeEgg } from "@/components/MarriedLifeEgg";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -34,7 +35,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={jakarta.className}>{children}</body>
+      <body className={jakarta.className}>
+        {children}
+        {/* hidden easter egg — Shift+L then M reveals a "Happy Married Life" card */}
+        <MarriedLifeEgg />
+      </body>
     </html>
   );
 }

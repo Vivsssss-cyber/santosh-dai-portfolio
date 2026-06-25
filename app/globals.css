@@ -768,8 +768,10 @@ body {
 }
 
 /* ===== ABOUT ===== */
-.about-grid { display: grid; gap: var(--s-8); align-items: start; }
+.about-grid { display: grid; gap: var(--s-8); align-items: stretch; }
 .about-loc { margin-bottom: var(--s-5); }
+/* left rail is a column: heading group packs at top, pull-quote anchors bottom */
+.about-rail { display: flex; flex-direction: column; }
 .about-body p {
   font-size: 16px;
   line-height: 1.7;
@@ -781,6 +783,23 @@ body {
 .about-body strong { color: var(--cream); font-weight: 600; }
 .about-tags { margin-top: var(--s-7); }
 .about-tags .eyebrow { display: block; margin-bottom: var(--s-3); }
+
+/* lead pull-quote — fills the sparse left rail with the section thesis;
+   display serif, narrow measure so it stacks tall like an editorial deck */
+.about-lead {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(21px, 2vw, 30px);
+  line-height: 1.22;
+  color: var(--cream);
+  max-width: 15ch;
+  text-wrap: balance;
+}
+.about-lead .lead-accent { color: var(--accent-1); }
+/* the pull-quote's reveal mask is the rail's last child — auto top-margin
+   pushes it to the bottom so it lines up with the body baseline; min gap keeps
+   it off the chips when the rail is short */
+.about-rail > .rv-mask:last-child { margin-top: auto; padding-top: var(--s-12); }
 
 /* ===== RESEARCH ===== */
 .research-sub {
@@ -1909,4 +1928,127 @@ body {
   .mem-card:hover .mem-corners i,
   .mem-card:hover .mem-arrow,
   .mem-card:hover .mem-cap { opacity: 1; transform: none; }
+}
+
+/* ===== easter egg — "Happy Married Life" (Shift + L) ===== */
+.egg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* tall cards stay reachable: scroll within the scrim, card stays centred */
+  overflow-y: auto;
+  padding: clamp(var(--s-5), 5vw, var(--s-16));
+  background: rgba(15, 9, 0, .86);
+  backdrop-filter: blur(6px);
+}
+.egg-card {
+  position: relative;
+  width: min(100%, 440px);
+  margin: auto; /* keeps the card centred even when it's taller than the scrim */
+  padding: clamp(var(--s-7), 3.5vw, var(--s-10)) clamp(var(--s-6), 5vw, var(--s-10));
+  text-align: center;
+  /* rounded, warm "card" with a soft top glow + faint amber rim */
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(250, 160, 51, .14), transparent 70%),
+    linear-gradient(180deg, #221604 0%, var(--bg) 60%);
+  border: 1px solid rgba(250, 160, 51, .28);
+  border-radius: 22px;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, .85),
+    0 0 60px -20px rgba(250, 160, 51, .25),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+/* registration corners — same blueprint language as .frame .plus */
+.egg-corners i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 0 solid rgba(250, 160, 51, .5);
+}
+.egg-corners .tl { top: 12px; left: 12px; border-top-width: 1px; border-left-width: 1px; }
+.egg-corners .tr { top: 12px; right: 12px; border-top-width: 1px; border-right-width: 1px; }
+.egg-corners .bl { bottom: 12px; left: 12px; border-bottom-width: 1px; border-left-width: 1px; }
+.egg-corners .br { bottom: 12px; right: 12px; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* couple photo — spotlight behind, soft ground shadow below */
+.egg-photo {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0 0 var(--s-2);
+  height: clamp(210px, 38vh, 300px);
+}
+.egg-spot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  height: 78%;
+  transform: translate(-50%, -52%);
+  background: radial-gradient(closest-side, rgba(250, 160, 51, .3), rgba(250, 160, 51, .08) 60%, transparent 75%);
+  filter: blur(4px);
+}
+.egg-couple {
+  position: relative;
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .55));
+}
+.egg-ground {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 62%;
+  height: 16px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent 75%);
+  filter: blur(3px);
+}
+
+/* tiny floating hearts */
+.egg-hearts {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: flex-end;
+  margin: var(--s-2) 0 var(--s-4);
+}
+.egg-hearts svg { width: 14px; height: 14px; }
+.egg-hearts svg:nth-child(2) { width: 20px; height: 20px; }
+.egg-title {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -.5px;
+  font-size: clamp(28px, 4.6vw, 40px);
+  line-height: 1.08;
+  color: var(--text-strong);
+  margin: 0 0 var(--s-4);
+}
+.egg-grad {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.egg-body {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-soft);
+  max-width: 40ch;
+  margin: 0 auto var(--s-5);
+}
+.egg-hint {
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .4px;
+  color: var(--text-muted);
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-scrim { backdrop-filter: none; }
 }

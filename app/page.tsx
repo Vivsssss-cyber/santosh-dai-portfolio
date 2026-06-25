@@ -91,7 +91,7 @@ export default function Home() {
         {/* ABOUT (01 / 04) */}
         <section id="about" className="section">
           <div className="wrap about-grid">
-            <Reveal>
+            <Reveal className="about-rail">
               <RevealItem>
                 <SectionHead num="01" label="About" />
               </RevealItem>
@@ -110,24 +110,29 @@ export default function Home() {
                   ]}
                 />
               </RevealItem>
+              <RevealItem as="p" className="about-lead">
+                Speech AI for the speakers{" "}
+                <span className="lead-accent">the mainstream ignores.</span>
+              </RevealItem>
             </Reveal>
             <Reveal className="about-body">
               <RevealItem as="p">
-                I work where speech recognition, large language models, and real
-                deployment meet — systems that hold up outside the lab and serve
-                speakers mainstream AI ignores.
+                I work where speech recognition, large language models, and{" "}
+                <strong>real deployment</strong> meet — systems that hold up outside
+                the lab.
               </RevealItem>
               <RevealItem as="p">
-                Most of my research makes ASR efficient enough to run on-device and
-                robust enough for accented and low-resource speech, especially Nepali.
-                Alongside that I’ve led production teams shipping conversational AI for
-                healthcare and public services — RAG chatbots used by thousands of real
-                users.
+                Most of my research makes ASR efficient enough to run{" "}
+                <strong>on-device</strong> and robust enough for accented and
+                low-resource speech, especially <strong>Nepali</strong>. Alongside
+                that I’ve led production teams shipping conversational AI for
+                healthcare and public services — RAG chatbots used by thousands of
+                real users.
               </RevealItem>
               <RevealItem as="p">
-                I’m completing an M.Sc in Informatics & Intelligence Systems
-                Engineering, after five years building and leading AI in industry —
-                most recently as a CTO.
+                I’m completing an <strong>M.Sc</strong> in Informatics &amp;
+                Intelligence Systems Engineering, after five years building and
+                leading AI in industry — most recently as a <strong>CTO</strong>.
               </RevealItem>
             </Reveal>
           </div>
