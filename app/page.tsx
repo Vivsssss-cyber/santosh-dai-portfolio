@@ -110,10 +110,6 @@ export default function Home() {
                   ]}
                 />
               </RevealItem>
-              <RevealItem as="p" className="about-lead">
-                Speech AI for the speakers{" "}
-                <span className="lead-accent">the mainstream ignores.</span>
-              </RevealItem>
             </Reveal>
             <Reveal className="about-body">
               <RevealItem as="p">
@@ -133,6 +129,12 @@ export default function Home() {
                 I’m completing an <strong>M.Sc</strong> in Informatics &amp;
                 Intelligence Systems Engineering, after five years building and
                 leading AI in industry — most recently as a <strong>CTO</strong>.
+              </RevealItem>
+            </Reveal>
+            <Reveal className="about-quote-row">
+              <RevealItem as="p" className="about-lead">
+                Speech AI for the speakers{" "}
+                <span className="lead-accent">the mainstream ignores.</span>
               </RevealItem>
             </Reveal>
           </div>
